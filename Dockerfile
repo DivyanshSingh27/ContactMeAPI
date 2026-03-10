@@ -1,25 +1,21 @@
-# Use official Java image
-FROM eclipse-temurin:17-jdk
+# ---------- BUILD STAGE ----------
+FROM maven:3.9.9-eclipse-temurin-17 AS build
 
-# Set working directory
 WORKDIR /app
 
-# Copy Maven wrapper files
-COPY mvnw .
-COPY .mvn .mvn
 COPY pom.xml .
+COPY src ./src
 
-# Download dependencies
-RUN ./mvnw dependency:go-offline
+RUN mvn clean package -DskipTests
 
-# Copy source code
-COPY src src
 
-# Build the application
-RUN ./mvnw clean package -DskipTests
+# ---------- RUNTIME STAGE ----------
+FROM eclipse-temurin:17-jdk
 
-# Expose port
+WORKDIR /app
+
+COPY --from=build /app/target/*.jar app.jar
+
 EXPOSE 8080
 
-# Run the application
-CMD ["java","-jar","target/*.jar"]
+ENTRYPOINT ["java","-jar","app.jar"]
