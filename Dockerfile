@@ -1,11 +1,25 @@
-FROM eclipse-temurin:21-jdk
+# Use official Java image
+FROM eclipse-temurin:17-jdk
 
+# Set working directory
 WORKDIR /app
 
-COPY . .
+# Copy Maven wrapper files
+COPY mvnw .
+COPY .mvn .mvn
+COPY pom.xml .
 
+# Download dependencies
+RUN ./mvnw dependency:go-offline
+
+# Copy source code
+COPY src src
+
+# Build the application
 RUN ./mvnw clean package -DskipTests
 
+# Expose port
 EXPOSE 8080
 
-CMD ["java", "-jar", "target/*.jar"]
+# Run the application
+CMD ["java","-jar","target/*.jar"]
